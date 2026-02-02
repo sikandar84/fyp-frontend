@@ -1,0 +1,122 @@
+body {
+  margin: 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+  color: #333;
+}
+
+.app {
+  max-width: 600px;
+  margin: 50px auto;
+  padding: 20px;
+  background: rgba(255,255,255,0.95);
+  border-radius: 15px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  animation: fadeIn 0.8s ease;
+}
+
+.title {
+  text-align: center;
+  font-size: 2rem;
+  color: #ff6347;
+  margin-bottom: 20px;
+  animation: slideDown 0.8s ease;
+}
+
+.input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+input[type="file"] {
+  padding: 10px;
+}
+
+input[type="number"] {
+  padding: 10px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+button {
+  padding: 12px;
+  font-size: 1rem;
+  border: none;
+  background: #ff6347;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+button:hover:not(:disabled) {
+  background: #ff4500;
+}
+
+.result-card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  animation: fadeIn 0.5s ease;
+  box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+
+.food-label {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #ff6347;
+  text-align: center;
+  margin: 10px 0;
+  letter-spacing: 1px;
+}
+
+.confidence {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.bar-container {
+  flex: 1;
+  height: 15px;
+  background: #eee;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  background: #ff6347;
+  border-radius: 10px;
+  transition: width 0.5s ease;
+}
+
+.nutrition-list {
+  list-style: none;
+  padding: 0;
+}
+
+.nutrition-list li {
+  padding: 5px 0;
+  font-size: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px);}
+  to { opacity: 1; transform: translateY(0);}
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px);}
+  to { opacity: 1; transform: translateY(0);}
+}
