@@ -106,16 +106,22 @@ from predict_nutrient import predict_nutrients
 from download_model import download_model
 import os
 
+# -----------------------------
 # Initialize FastAPI
-app = FastAPI()
+# -----------------------------
+app = FastAPI(title="Nutrition & Recommendation API")
 
+# -----------------------------
 # Ensure model is downloaded from Drive
-download_model()
+# -----------------------------
+download_model()  # This should check if model exists, otherwise downloads
 
-# Enable CORS
+# -----------------------------
+# Enable CORS for frontend
+# -----------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Change "*" to frontend URL in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -124,7 +130,10 @@ app.add_middleware(
 # -----------------------------
 # Recommendation Logic
 # -----------------------------
-def generate_recommendation(nutrition, goal, disease):
+def generate_recommendation(nutrition: dict, goal: str = "maintain", disease: str = None):
+    """
+    Generate personalized recommendations based on nutrition, goal, and disease.
+    """
     recommendations = []
 
     calories = nutrition.get("calories", 0)
@@ -132,13 +141,15 @@ def generate_recommendation(nutrition, goal, disease):
     sodium = nutrition.get("sodium", 0)
     fats = nutrition.get("fats", 0)
 
-    # Goal-based
+    # -----------------------------
+    # Goal-based recommendations
+    # -----------------------------
     if goal == "weight_loss":
         if calories > 400:
             recommendations.append("High calories – reduce portion size.")
         if fats > 20:
             recommendations.append("High fat – avoid frequent consumption.")
-        recommendations.append("Prefer boiled, grilled or low-oil foods.")
+        recommendations.append("Prefer boiled, grilled, or low-oil foods.")
 
     elif goal == "weight_gain":
         if calories > 300:
@@ -149,21 +160,25 @@ def generate_recommendation(nutrition, goal, disease):
     elif goal == "maintain":
         recommendations.append("Consume in moderate portion to maintain weight.")
 
-    # Disease-based
-    if disease == "diabetes":
-        if sugar > 10:
-            recommendations.append("High sugar – not recommended for diabetes.")
+    # -----------------------------
+    # Disease-based recommendations
+    # -----------------------------
+    if disease:
+        disease = disease.lower()
+        if disease == "diabetes":
+            if sugar > 10:
+                recommendations.append("High sugar – not recommended for diabetes.")
+        elif disease == "hypertension":
+            if sodium > 400:
+                recommendations.append("High sodium – avoid for blood pressure patients.")
 
-    if disease == "hypertension":
-        if sodium > 400:
-            recommendations.append("High sodium – avoid for blood pressure patients.")
-
-    # General
+    # -----------------------------
+    # General recommendations
+    # -----------------------------
     if calories < 150:
         recommendations.append("Low calorie – healthy light option.")
 
     return recommendations
-
 
 # -----------------------------
 # Prediction Endpoint
@@ -177,33 +192,49 @@ async def predict(
     goal: str = Form("maintain"),
     disease: str = Form(None)
 ):
-    # Save file temporarily
+    """
+    Endpoint to handle:
+    1. Nutrition prediction
+    2. Recommendation generation based on user input
+    """
+    # -----------------------------
+    # Save uploaded file temporarily
+    # -----------------------------
     file_location = f"temp_{file.filename}"
     with open(file_location, "wb") as f:
         f.write(await file.read())
 
-    # Nutrition prediction (UNCHANGED)
-    result = predict_nutrients(file_location, weight)
+    try:
+        # -----------------------------
+        # Nutrition prediction
+        # -----------------------------
+        result = predict_nutrients(file_location, weight)
 
-    # Remove temp file
-    if os.path.exists(file_location):
-        os.remove(file_location)
+        # -----------------------------
+        # Add recommendation based on goal/disease
+        # -----------------------------
+        recommendations = generate_recommendation(result, goal, disease)
+        result["recommendations"] = recommendations
+        result["user_goal"] = goal
+        result["disease"] = disease
+        result["gender"] = gender
+        result["age"] = age
 
-    # -----------------------------
-    # Add Recommendation
-    # -----------------------------
-    recommendations = generate_recommendation(result, goal, disease)
+    except Exception as e:
+        # Return error if prediction fails
+        return {"error": str(e)}
 
-    # Add into response
-    result["recommendations"] = recommendations
-    result["user_goal"] = goal
-    result["disease"] = disease
+    finally:
+        # Remove temporary file
+        if os.path.exists(file_location):
+            os.remove(file_location)
 
     return result
 
-
-# Run server
+# -----------------------------
+# Run server (local or Render/Railway)
+# -----------------------------
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
-    uvicorn.run("main:app", host="0.0.0.0", port=port)
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=False)
