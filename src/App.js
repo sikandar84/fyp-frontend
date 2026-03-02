@@ -99,15 +99,17 @@
 
 
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./App.css";
 
 function App() {
   const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState(null);
   const [weight, setWeight] = useState(100);
   const [nutrition, setNutrition] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [recLoading, setRecLoading] = useState(false);
 
   const [userInputs, setUserInputs] = useState({
     age: "",
@@ -117,6 +119,17 @@ function App() {
   });
 
   const [recommendation, setRecommendation] = useState(null);
+
+  // Handle image preview
+  useEffect(() => {
+    if (!file) {
+      setPreview(null);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(file);
+    setPreview(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [file]);
 
   // Step 1: Upload & predict nutrition
   const handlePredict = async () => {
@@ -136,11 +149,10 @@ function App() {
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
-
       setNutrition(response.data);
     } catch (err) {
       console.error(err);
-      alert("Error predicting nutrition");
+      alert("Error predicting nutrition. Please check the backend connection.");
     } finally {
       setLoading(false);
     }
@@ -151,10 +163,12 @@ function App() {
     if (!nutrition) return;
 
     const formData = new FormData();
+    // Append all nutrition facts to the recommendation request
     Object.entries(nutrition).forEach(([k, v]) => formData.append(k, v || 0));
     formData.append("goal", userInputs.goal);
     formData.append("disease", userInputs.disease);
 
+    setRecLoading(true);
     try {
       const response = await axios.post(
         "https://fyp-backend-production-18ec.up.railway.app/recommend",
@@ -164,83 +178,105 @@ function App() {
     } catch (err) {
       console.error(err);
       alert("Error getting recommendation");
+    } finally {
+      setRecLoading(false);
     }
   };
 
   return (
     <div className="app">
-      <h1 className="title">🍽️ Nutrition & Recommendation</h1>
+      <h1 className="title">🍽️ NutriSmart AI</h1>
 
       <div className="input-container">
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => setFile(e.target.files[0])}
-        />
-        <input
-          type="number"
-          min="1"
-          value={weight}
-          onChange={(e) => setWeight(e.target.value)}
-          placeholder="Weight (g)"
-        />
+        <label className="file-input-label">
+          {preview ? (
+            <img src={preview} alt="Preview" className="image-preview" />
+          ) : (
+            <div className="upload-placeholder">📸 Click to upload food image</div>
+          )}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setFile(e.target.files[0])}
+            style={{ display: "none" }}
+          />
+        </label>
+
+        <div className="weight-input">
+          <label>Portion Weight (grams):</label>
+          <input
+            type="number"
+            min="1"
+            value={weight}
+            onChange={(e) => setWeight(e.target.value)}
+            placeholder="e.g. 150"
+          />
+        </div>
+
         <button onClick={handlePredict} disabled={loading}>
-          {loading ? "Predicting..." : "Predict Nutrition"}
+          {loading ? "Analyzing Food..." : "Predict Nutrition"}
         </button>
       </div>
 
       {nutrition && (
         <div className="result-card">
-          <h2>Nutrition Result</h2>
+          <h2>📊 Nutrition Analysis</h2>
           <ul className="nutrition-list">
-            <li>Calories: {nutrition.calories}</li>
-            <li>Protein: {nutrition.protein} g</li>
-            <li>Carbohydrates: {nutrition.carbohydrates} g</li>
-            <li>Fats: {nutrition.fats} g</li>
-            <li>Fiber: {nutrition.fiber} g</li>
-            <li>Sugars: {nutrition.sugars} g</li>
-            <li>Sodium: {nutrition.sodium} mg</li>
+            <li>🔥 Calories: {nutrition.calories}</li>
+            <li>💪 Protein: {nutrition.protein}g</li>
+            <li>🍞 Carbs: {nutrition.carbohydrates}g</li>
+            <li>🥑 Fats: {nutrition.fats}g</li>
+            <li>🌾 Fiber: {nutrition.fiber}g</li>
+            <li>🍭 Sugars: {nutrition.sugars}g</li>
+            <li>🧂 Sodium: {nutrition.sodium}mg</li>
           </ul>
 
-          <h3>User Details for Recommendation</h3>
-          <input
-            type="number"
-            placeholder="Age"
-            value={userInputs.age}
-            onChange={(e) => setUserInputs({ ...userInputs, age: e.target.value })}
-          />
-          <input
-            type="text"
-            placeholder="Gender"
-            value={userInputs.gender}
-            onChange={(e) =>
-              setUserInputs({ ...userInputs, gender: e.target.value })
-            }
-          />
-          <select
-            value={userInputs.goal}
-            onChange={(e) => setUserInputs({ ...userInputs, goal: e.target.value })}
-          >
-            <option value="maintain">Maintain</option>
-            <option value="weight_loss">Weight Loss</option>
-            <option value="weight_gain">Weight Gain</option>
-          </select>
-          <input
-            type="text"
-            placeholder="Disease (diabetes / hypertension)"
-            value={userInputs.disease}
-            onChange={(e) =>
-              setUserInputs({ ...userInputs, disease: e.target.value })
-            }
-          />
-          <button onClick={handleRecommendation}>Get Recommendation</button>
+          <div className="user-details-form">
+            <h3>🎯 Personalized Insights</h3>
+            <div className="input-grid">
+              <input
+                type="number"
+                placeholder="Your Age"
+                value={userInputs.age}
+                onChange={(e) => setUserInputs({ ...userInputs, age: e.target.value })}
+              />
+              <select
+                value={userInputs.gender}
+                onChange={(e) => setUserInputs({ ...userInputs, gender: e.target.value })}
+              >
+                <option value="">Select Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </div>
+
+            <select
+              value={userInputs.goal}
+              onChange={(e) => setUserInputs({ ...userInputs, goal: e.target.value })}
+            >
+              <option value="maintain">Maintain Weight</option>
+              <option value="weight_loss">Weight Loss</option>
+              <option value="weight_gain">Weight Gain</option>
+            </select>
+
+            <input
+              type="text"
+              placeholder="Conditions (e.g. diabetes, hypertension)"
+              value={userInputs.disease}
+              onChange={(e) => setUserInputs({ ...userInputs, disease: e.target.value })}
+            />
+            
+            <button className="rec-btn" onClick={handleRecommendation} disabled={recLoading}>
+              {recLoading ? "Generating Tips..." : "Get Health Recommendation"}
+            </button>
+          </div>
         </div>
       )}
 
       {recommendation && (
-        <div className="result-card">
-          <h2>Recommendation</h2>
-          <ul>
+        <div className="result-card recommendation-section">
+          <h2>💡 Recommendations</h2>
+          <ul className="rec-list">
             {recommendation.map((rec, idx) => (
               <li key={idx}>{rec}</li>
             ))}
