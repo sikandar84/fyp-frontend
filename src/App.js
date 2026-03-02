@@ -99,190 +99,114 @@
 
 
 
-import React, { useState } from "react";
-import axios from "axios";
-import "./App.css";
+from fastapi import FastAPI, UploadFile, File, Form
+from fastapi.middleware.cors import CORSMiddleware
+from predict_nutrient import predict_nutrients
+from download_model import download_model
+import os
 
-function App() {
-  const [file, setFile] = useState(null);
-  const [weight, setWeight] = useState(100);
-  const [nutritionResult, setNutritionResult] = useState(null);
-  const [loading, setLoading] = useState(false);
+# Initialize FastAPI
+app = FastAPI()
 
-  // User inputs for recommendation
-  const [age, setAge] = useState("");
-  const [gender, setGender] = useState("");
-  const [goal, setGoal] = useState("maintain");
-  const [disease, setDisease] = useState("");
-  const [recommendations, setRecommendations] = useState(null);
+# Ensure model is downloaded
+download_model()
 
-  // -----------------------------
-  // Step 1: Upload and predict nutrition
-  // -----------------------------
-  const handlePredictNutrition = async () => {
-    if (!file) {
-      alert("Please select an image");
-      return;
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# -----------------------------
+# Recommendation logic
+# -----------------------------
+def generate_recommendation(nutrition, goal, disease):
+    recommendations = []
+
+    calories = nutrition.get("calories", 0)
+    sugar = nutrition.get("sugars", 0)
+    sodium = nutrition.get("sodium", 0)
+    fats = nutrition.get("fats", 0)
+
+    # Goal-based
+    if goal == "weight_loss":
+        if calories > 400:
+            recommendations.append("High calories – reduce portion size.")
+        if fats > 20:
+            recommendations.append("High fat – avoid frequent consumption.")
+        recommendations.append("Prefer boiled, grilled, or low-oil foods.")
+    elif goal == "weight_gain":
+        if calories > 300:
+            recommendations.append("Good high-energy food for weight gain.")
+        else:
+            recommendations.append("Add more calorie-dense foods with this meal.")
+    elif goal == "maintain":
+        recommendations.append("Consume in moderate portion to maintain weight.")
+
+    # Disease-based
+    if disease == "diabetes" and sugar > 10:
+        recommendations.append("High sugar – not recommended for diabetes.")
+    if disease == "hypertension" and sodium > 400:
+        recommendations.append("High sodium – avoid for blood pressure patients.")
+
+    # General
+    if calories < 150:
+        recommendations.append("Low calorie – healthy light option.")
+
+    return recommendations
+
+# -----------------------------
+# Nutrition prediction endpoint
+# -----------------------------
+@app.post("/predict")
+async def predict(file: UploadFile = File(...), weight: float = Form(...)):
+    file_location = f"temp_{file.filename}"
+    with open(file_location, "wb") as f:
+        f.write(await file.read())
+
+    # Call prediction
+    result = predict_nutrients(file_location, weight)
+
+    if os.path.exists(file_location):
+        os.remove(file_location)
+
+    return result
+
+# -----------------------------
+# Recommendation endpoint
+# -----------------------------
+@app.post("/recommend")
+async def recommend(
+    calories: float = Form(...),
+    protein: float = Form(...),
+    carbohydrates: float = Form(...),
+    fats: float = Form(...),
+    fiber: float = Form(...),
+    sugars: float = Form(...),
+    sodium: float = Form(...),
+    goal: str = Form("maintain"),
+    disease: str = Form(None)
+):
+    nutrition = {
+        "calories": calories,
+        "protein": protein,
+        "carbohydrates": carbohydrates,
+        "fats": fats,
+        "fiber": fiber,
+        "sugars": sugars,
+        "sodium": sodium
     }
+    recs = generate_recommendation(nutrition, goal, disease)
+    return {"recommendations": recs, "goal": goal, "disease": disease}
 
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("weight", weight);
 
-    setLoading(true);
-    setNutritionResult(null);
-    setRecommendations(null); // clear previous recommendations
-
-    try {
-      const response = await axios.post(
-        "https://fyp-backend-production-18ec.up.railway.app/predict",
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
-      setNutritionResult(response.data);
-
-      // Reset file input
-      setFile(null);
-      document.getElementById("fileInput").value = "";
-    } catch (error) {
-      console.error(error);
-      alert("Error calling backend");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // -----------------------------
-  // Step 2: Submit user details for recommendation
-  // -----------------------------
-  const handleGetRecommendation = async () => {
-    if (!nutritionResult) return;
-
-    const formData = new FormData();
-    formData.append("file", new Blob()); // Dummy file since prediction done
-    formData.append("weight", nutritionResult.weight);
-    formData.append("age", age);
-    formData.append("gender", gender);
-    formData.append("goal", goal);
-    formData.append("disease", disease);
-
-    setLoading(true);
-
-    try {
-      const response = await axios.post(
-        "https://fyp-backend-production-18ec.up.railway.app/predict",
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
-
-      setRecommendations(response.data.recommendations || []);
-    } catch (error) {
-      console.error(error);
-      alert("Error getting recommendation");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="app">
-      <h1 className="title">🍽️ Nutrition & Recommendation System</h1>
-
-      {/* Step 1: Upload food image */}
-      {!nutritionResult && (
-        <div className="input-container">
-          <input
-            id="fileInput"
-            type="file"
-            accept="image/*"
-            onChange={(e) => setFile(e.target.files[0])}
-          />
-          <input
-            type="number"
-            min="1"
-            value={weight}
-            onChange={(e) => setWeight(e.target.value)}
-            placeholder="Weight (g)"
-          />
-          <button onClick={handlePredictNutrition} disabled={loading}>
-            {loading ? "Predicting..." : "Predict Nutrition"}
-          </button>
-        </div>
-      )}
-
-      {/* Step 2: Show nutrition result */}
-      {nutritionResult && (
-        <div className="result-card">
-          <h2>Nutrition Result</h2>
-          <p className="food-label">{nutritionResult.label.toUpperCase()}</p>
-          <div className="confidence">
-            <span>Confidence:</span>
-            <div className="bar-container">
-              <div
-                className="bar"
-                style={{ width: `${(nutritionResult.confidence || 0) * 100}%` }}
-              ></div>
-            </div>
-            <span>{((nutritionResult.confidence || 0) * 100).toFixed(1)}%</span>
-          </div>
-
-          <h3>Nutrition (for {nutritionResult.weight} g)</h3>
-          <ul className="nutrition-list">
-            <li>Calories: {nutritionResult.calories}</li>
-            <li>Protein: {nutritionResult.protein} g</li>
-            <li>Carbohydrates: {nutritionResult.carbohydrates} g</li>
-            <li>Fats: {nutritionResult.fats} g</li>
-            <li>Fiber: {nutritionResult.fiber} g</li>
-            <li>Sugars: {nutritionResult.sugars} g</li>
-            <li>Sodium: {nutritionResult.sodium} mg</li>
-          </ul>
-
-          {/* Step 3: User details for recommendation */}
-          {!recommendations && (
-            <div className="user-inputs">
-              <h3>Enter your details for recommendations:</h3>
-              <input
-                type="number"
-                placeholder="Age"
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
-              />
-              <select value={gender} onChange={(e) => setGender(e.target.value)}>
-                <option value="">Select Gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-              </select>
-              <select value={goal} onChange={(e) => setGoal(e.target.value)}>
-                <option value="weight_loss">Weight Loss</option>
-                <option value="weight_gain">Weight Gain</option>
-                <option value="maintain">Maintain Weight</option>
-              </select>
-              <select value={disease} onChange={(e) => setDisease(e.target.value)}>
-                <option value="">No Disease</option>
-                <option value="diabetes">Diabetes</option>
-                <option value="hypertension">Hypertension</option>
-              </select>
-              <button onClick={handleGetRecommendation} disabled={loading}>
-                {loading ? "Generating..." : "Get Recommendations"}
-              </button>
-            </div>
-          )}
-
-          {/* Step 4: Show recommendations */}
-          {recommendations && (
-            <div className="recommendation-card">
-              <h3>Personalized Recommendations</h3>
-              <ul>
-                {recommendations.map((rec, index) => (
-                  <li key={index}>{rec}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-export default App;
+# -----------------------------
+# Run server
+# -----------------------------
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
