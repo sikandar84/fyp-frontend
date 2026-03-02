@@ -23,7 +23,7 @@ function App() {
 
     try {
       const response = await axios.post(
-        "https://fyp-backend-production-adce.up.railway.app/predict",
+        "https://fyp-backend-production-18ec.up.railway.app/predict",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
