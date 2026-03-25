@@ -341,7 +341,7 @@ function App() {
 
     try {
       const res = await axios.post(
-        "https://fyp-backend-production-18ec.up.railway.app/predict",
+        "https://fyp-backend-production-82be.up.railway.app/predict",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
