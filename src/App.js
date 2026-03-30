@@ -4,7 +4,7 @@
 
 // function App() {
 //   const [file, setFile] = useState(null);
-//   const [weight, setWeight] = useState(100);
+//   const [weight, setWeight] = useState(100)
 //   const [result, setResult] = useState(null);
 //   const [loading, setLoading] = useState(false);
 
