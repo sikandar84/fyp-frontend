@@ -185,6 +185,8 @@ function App() {
     formData.append("sodium", result.sodium);
 
     // user data
+    formData.append("age", age);
+formData.append("gender", gender);
     formData.append("goal", goal);
     formData.append("disease", disease || "");
 
