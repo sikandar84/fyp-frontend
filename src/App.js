@@ -284,27 +284,22 @@ function App() {
 
       {/* RESULT */}
       {result && !result.error && (
-        <div style={styles.card}>
+  <div style={{ marginTop: 20 }}>
 
-          <h2>Prediction Result</h2>
+    <h2>Prediction Result</h2>
 
-          <h3>🍽 Food: {result.label}</h3>
+    <h3>🍽️ {result?.label || "Unknown Food"}</h3>
 
-          <p>Confidence: {result.confidence}</p>
-          <p>Weight: {result.weight}</p>
+    <p>Calories: {result?.calories ?? 0}</p>
+    <p>Protein: {result?.protein ?? 0} g</p>
+    <p>Carbohydrates: {result?.carbohydrates ?? 0} g</p>
+    <p>Fats: {result?.fats ?? 0} g</p>
+    <p>Fiber: {result?.fiber ?? 0} g</p>
+    <p>Sugars: {result?.sugars ?? 0} g</p>
+    <p>Sodium: {result?.sodium ?? 0} mg</p>
 
-          <hr />
-
-          <p>🔥 Calories: {result.calories}</p>
-          <p>💪 Protein: {result.protein}</p>
-          <p>🍞 Carbohydrates: {result.carbohydrates}</p>
-          <p>🥑 Fats: {result.fats}</p>
-          <p>🌾 Fiber: {result.fiber}</p>
-          <p>🍬 Sugars: {result.sugars}</p>
-          <p>🧂 Sodium: {result.sodium}</p>
-
-        </div>
-      )}
+  </div>
+)}
 
     </div>
   );
