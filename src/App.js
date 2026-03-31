@@ -1,195 +1,195 @@
-// import React, { useState } from "react";
+import React, { useState } from "react";
 
-// import axios from "axios";
+import axios from "axios";
 
-// import "./App.css";
+import "./App.css";
 
 
 
-// function App() {
+function App() {
 
-//   const [file, setFile] = useState(null);
+  const [file, setFile] = useState(null);
 
-//   const [weight, setWeight] = useState(100);
+  const [weight, setWeight] = useState(100);
 
-//   const [result, setResult] = useState(null);
+  const [result, setResult] = useState(null);
 
-//   const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
 
 
-//   const handlePredict = async () => {
+  const handlePredict = async () => {
 
-//     if (!file) {
+    if (!file) {
 
-//       alert("Please select an image");
+      alert("Please select an image");
 
-//       return;
+      return;
 
-//     }
+    }
 
 
 
-//     const formData = new FormData(); // Always create new FormData
+    const formData = new FormData(); // Always create new FormData
 
-//     formData.append("file", file);
+    formData.append("file", file);
 
-//     formData.append("weight", weight);
+    formData.append("weight", weight);
 
 
 
-//     setLoading(true);
+    setLoading(true);
 
-//     setResult(null);
+    setResult(null);
 
 
 
-//     try {
+    try {
 
-//       const response = await axios.post(
+      const response = await axios.post(
 
-//         "https://fyp-backend-production-82be.up.railway.app/predict",
+        "https://fyp-backend-production-82be.up.railway.app/predict",
 
-//         formData,
+        formData,
 
-//         { headers: { "Content-Type": "multipart/form-data" } }
+        { headers: { "Content-Type": "multipart/form-data" } }
 
-//       );
+      );
 
 
 
-//       setResult(response.data);
+      setResult(response.data);
 
 
 
-//       // Reset file input
+      // Reset file input
 
-//       setFile(null);
+      setFile(null);
 
-//       document.getElementById("fileInput").value = "";
+      document.getElementById("fileInput").value = "";
 
-//     } catch (error) {
+    } catch (error) {
 
-//       console.error(error);
+      console.error(error);
 
-//       alert("Error calling backend");
+      alert("Error calling backend");
 
-//     } finally {
+    } finally {
 
-//       setLoading(false);
+      setLoading(false);
 
-//     }
+    }
 
-//   };
+  };
 
 
 
-//   return (
+  return (
 
-//     <div className="app">
+    <div className="app">
 
-//       <h1 className="title">🍽️ Nutrition Detector</h1>
+      <h1 className="title">🍽️ Nutrition Detector</h1>
 
 
 
-//       <div className="input-container">
+      <div className="input-container">
 
-//         <input
+        <input
 
-//           id="fileInput"
+          id="fileInput"
 
-//           type="file"
+          type="file"
 
-//           accept="image/*"
+          accept="image/*"
 
-//           onChange={(e) => setFile(e.target.files[0])}
+          onChange={(e) => setFile(e.target.files[0])}
 
-//         />
+        />
 
-//         <input
+        <input
 
-//           type="number"
+          type="number"
 
-//           min="1"
+          min="1"
 
-//           value={weight}
+          value={weight}
 
-//           onChange={(e) => setWeight(e.target.value)}
+          onChange={(e) => setWeight(e.target.value)}
 
-//           placeholder="Weight (g)"
+          placeholder="Weight (g)"
 
-//         />
+        />
 
-//         <button onClick={handlePredict} disabled={loading}>
+        <button onClick={handlePredict} disabled={loading}>
 
-//           {loading ? "Predicting..." : "Predict"}
+          {loading ? "Predicting..." : "Predict"}
 
-//         </button>
+        </button>
 
-//       </div>
+      </div>
 
 
 
-//       {result && (
+      {result && (
 
-//         <div className="result-card">
+        <div className="result-card">
 
-//           <h2>Prediction Result</h2>
+          <h2>Prediction Result</h2>
 
-//           <p className="food-label">{result.label.toUpperCase()}</p>
+          <p className="food-label">{result.label.toUpperCase()}</p>
 
-//           <div className="confidence">
+          <div className="confidence">
 
-//             <span>Confidence:</span>
+            <span>Confidence:</span>
 
-//             <div className="bar-container">
+            <div className="bar-container">
 
-//               <div
+              <div
 
-//                 className="bar"
+                className="bar"
 
-//                 style={{ width: ${(result.confidence || 0) * 100}% }}
+                style={{ width: ${(result.confidence || 0) * 100}% }}
 
-//               ></div>
+              ></div>
 
-//             </div>
+            </div>
 
-//             <span>{((result.confidence || 0) * 100).toFixed(1)}%</span>
+            <span>{((result.confidence || 0) * 100).toFixed(1)}%</span>
 
-//           </div>
+          </div>
 
 
 
-//           <h3>Nutrition (for {result.weight} g)</h3>
+          <h3>Nutrition (for {result.weight} g)</h3>
 
-//           <ul className="nutrition-list">
+          <ul className="nutrition-list">
 
-//             <li>Calories: {result.calories}</li>
+            <li>Calories: {result.calories}</li>
 
-//             <li>Protein: {result.protein} g</li>
+            <li>Protein: {result.protein} g</li>
 
-//             <li>Carbohydrates: {result.carbohydrates} g</li>
+            <li>Carbohydrates: {result.carbohydrates} g</li>
 
-//             <li>Fats: {result.fats} g</li>
+            <li>Fats: {result.fats} g</li>
 
-//             <li>Fiber: {result.fiber} g</li>
+            <li>Fiber: {result.fiber} g</li>
 
-//             <li>Sugars: {result.sugars} g</li>
+            <li>Sugars: {result.sugars} g</li>
 
-//             <li>Sodium: {result.sodium} mg</li>
+            <li>Sodium: {result.sodium} mg</li>
 
-//           </ul>
+          </ul>
 
-//         </div>
+        </div>
 
-//       )}
+      )}
 
-//     </div>
+    </div>
 
-//   );
+  );
 
-// }
+}
 
 
 
-// export default App; 
+export default App; 
