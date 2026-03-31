@@ -207,7 +207,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-function App() {
+export default function App() {
   const [file, setFile] = useState(null);
   const [weight, setWeight] = useState(100);
   const [result, setResult] = useState(null);
@@ -215,13 +215,9 @@ function App() {
 
   const BASE_URL = "https://fyp-backend-production-82be.up.railway.app";
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-  };
-
   const handlePredict = async () => {
     if (!file) {
-      alert("Please select an image first");
+      alert("Please select an image");
       return;
     }
 
@@ -245,8 +241,11 @@ function App() {
 
     } catch (err) {
       console.log("ERROR:", err);
+
       setResult({
-        error: err?.response?.data?.error || "Backend error"
+        error:
+          err?.response?.data?.error ||
+          "Server error or model failed to respond",
       });
     }
 
@@ -255,52 +254,58 @@ function App() {
 
   return (
     <div style={styles.container}>
-
       <h1>🍎 Food Nutrition AI</h1>
 
-      {/* Upload */}
-      <input type="file" onChange={handleFileChange} />
+      {/* FILE INPUT */}
+      <input
+        type="file"
+        accept="image/*"
+        onChange={(e) => setFile(e.target.files[0])}
+      />
 
-      {/* Weight */}
+      {/* WEIGHT INPUT */}
       <input
         type="number"
         value={weight}
         onChange={(e) => setWeight(e.target.value)}
         placeholder="Enter weight"
+        style={{ marginLeft: 10 }}
       />
 
-      {/* Button */}
-      <button onClick={handlePredict} disabled={loading}>
+      {/* BUTTON */}
+      <button onClick={handlePredict} disabled={loading} style={styles.btn}>
         {loading ? "Predicting..." : "Predict"}
       </button>
 
       {/* ERROR */}
       {result?.error && (
-        <div style={{ color: "red", marginTop: 20 }}>
-          <h3>Error</h3>
+        <div style={styles.errorBox}>
+          <h3>❌ Error</h3>
           <p>{result.error}</p>
         </div>
       )}
 
       {/* RESULT */}
       {result && !result.error && (
-  <div style={{ marginTop: 20 }}>
+        <div style={styles.card}>
+          <h2>🍽️ Prediction Result</h2>
 
-    <h2>Prediction Result</h2>
+          <h3>Food: {result.label || "Unknown"}</h3>
 
-    <h3>🍽️ {result?.label || "Unknown Food"}</h3>
+          <p>Confidence: {result.confidence ?? 0}</p>
+          <p>Weight: {result.weight ?? weight}</p>
 
-    <p>Calories: {result?.calories ?? 0}</p>
-    <p>Protein: {result?.protein ?? 0} g</p>
-    <p>Carbohydrates: {result?.carbohydrates ?? 0} g</p>
-    <p>Fats: {result?.fats ?? 0} g</p>
-    <p>Fiber: {result?.fiber ?? 0} g</p>
-    <p>Sugars: {result?.sugars ?? 0} g</p>
-    <p>Sodium: {result?.sodium ?? 0} mg</p>
+          <hr />
 
-  </div>
-)}
-
+          <p>Calories: {result.calories ?? 0}</p>
+          <p>Protein: {result.protein ?? 0} g</p>
+          <p>Carbohydrates: {result.carbohydrates ?? 0} g</p>
+          <p>Fats: {result.fats ?? 0} g</p>
+          <p>Fiber: {result.fiber ?? 0} g</p>
+          <p>Sugars: {result.sugars ?? 0} g</p>
+          <p>Sodium: {result.sodium ?? 0} mg</p>
+        </div>
+      )}
     </div>
   );
 }
@@ -309,16 +314,23 @@ const styles = {
   container: {
     padding: 30,
     fontFamily: "Arial",
-    textAlign: "center"
+    textAlign: "center",
+  },
+  btn: {
+    marginLeft: 10,
+    padding: "5px 10px",
+    cursor: "pointer",
   },
   card: {
     marginTop: 20,
     padding: 20,
-    border: "1px solid #ddd",
+    border: "1px solid #ccc",
     borderRadius: 10,
     display: "inline-block",
-    textAlign: "left"
-  }
+    textAlign: "left",
+  },
+  errorBox: {
+    marginTop: 20,
+    color: "red",
+  },
 };
-
-export default App;
