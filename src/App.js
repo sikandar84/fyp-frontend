@@ -119,7 +119,6 @@ function App() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // 🔥 NEW STATES
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
   const [disease, setDisease] = useState("");
@@ -165,7 +164,7 @@ function App() {
   };
 
   // -------------------------
-  // 🔥 Get Recommendation
+  // Get Recommendation (SAFE VERSION)
   // -------------------------
   const getRecommendation = async () => {
     if (!result) {
@@ -175,19 +174,17 @@ function App() {
 
     const formData = new FormData();
 
-    // nutrients
-    formData.append("calories", result.calories);
-    formData.append("protein", result.protein);
-    formData.append("carbohydrates", result.carbohydrates);
-    formData.append("fats", result.fats);
-    formData.append("fiber", result.fiber);
-    formData.append("sugars", result.sugars);
-    formData.append("sodium", result.sodium);
+    formData.append("calories", result.calories || 0);
+    formData.append("protein", result.protein || 0);
+    formData.append("carbohydrates", result.carbohydrates || 0);
+    formData.append("fats", result.fats || 0);
+    formData.append("fiber", result.fiber || 0);
+    formData.append("sugars", result.sugars || 0);
+    formData.append("sodium", result.sodium || 0);
 
-    // user data
-    formData.append("age", age);
-formData.append("gender", gender);
-    formData.append("goal", goal);
+    formData.append("age", age || 0);
+    formData.append("gender", gender || "Unknown");
+    formData.append("goal", goal || "maintain");
     formData.append("disease", disease || "");
 
     setRecLoading(true);
@@ -200,10 +197,17 @@ formData.append("gender", gender);
         { headers: { "Content-Type": "multipart/form-data" } }
       );
 
-      setRecommendation(response.data.recommendations[0]);
+      const rec = response.data?.recommendations?.[0];
+
+      if (rec) {
+        setRecommendation(rec);
+      } else {
+        setRecommendation("No AI response received.");
+      }
+
     } catch (err) {
       console.error(err);
-      alert("Error getting recommendation");
+      setRecommendation("AI service failed. Try again.");
     } finally {
       setRecLoading(false);
     }
@@ -213,6 +217,7 @@ formData.append("gender", gender);
     <div className="app">
       <h1 className="title">🍽️ Nutrition Detector</h1>
 
+      {/* INPUT */}
       <div className="input-container">
         <input
           id="fileInput"
@@ -238,20 +243,20 @@ formData.append("gender", gender);
       {result && (
         <div className="result-card">
           <h2>Prediction Result</h2>
-          <p className="food-label">{result.label.toUpperCase()}</p>
+          <p className="food-label">{result.label?.toUpperCase()}</p>
 
           <h3>Nutrition (for {result.weight} g)</h3>
           <ul className="nutrition-list">
             <li>Calories: {result.calories}</li>
             <li>Protein: {result.protein} g</li>
-            <li>Carbohydrates: {result.carbohydrates} g</li>
+            <li>Carbs: {result.carbohydrates} g</li>
             <li>Fats: {result.fats} g</li>
             <li>Fiber: {result.fiber} g</li>
             <li>Sugars: {result.sugars} g</li>
             <li>Sodium: {result.sodium} mg</li>
           </ul>
 
-          {/* 🔥 USER INPUT */}
+          {/* USER INPUT */}
           <div className="user-inputs">
             <h3>Personal Info</h3>
 
@@ -262,13 +267,10 @@ formData.append("gender", gender);
               onChange={(e) => setAge(e.target.value)}
             />
 
-            <select
-              value={gender}
-              onChange={(e) => setGender(e.target.value)}
-            >
+            <select value={gender} onChange={(e) => setGender(e.target.value)}>
               <option value="">Select Gender</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
             </select>
 
             <select value={goal} onChange={(e) => setGoal(e.target.value)}>
@@ -289,7 +291,7 @@ formData.append("gender", gender);
             </button>
           </div>
 
-          {/* 🔥 AI OUTPUT */}
+          {/* AI OUTPUT */}
           {recommendation && (
             <div className="recommendation-box">
               <h3>AI Recommendation</h3>
