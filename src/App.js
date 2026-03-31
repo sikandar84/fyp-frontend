@@ -113,6 +113,8 @@ import React, { useState } from "react";
 import axios from "axios";
 import "./App.css";
 
+const API_BASE = "https://fyp-backend-production-82be.up.railway.app";
+
 function App() {
   const [file, setFile] = useState(null);
   const [weight, setWeight] = useState(100);
@@ -132,34 +134,27 @@ function App() {
   // -------------------------
   const handlePredict = async () => {
     if (!file) {
-      alert("Please select an image");
+      alert("Select image");
       return;
     }
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("weight", Number(weight)); // FIX
+    formData.append("weight", Number(weight));
 
     setLoading(true);
-    setResult(null);
-    setRecommendation("");
 
     try {
-      const response = await axios.post(
-        "https://fyp-backend-production-82be.up.railway.app/predict",
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
+      const res = await axios.post(`${API_BASE}/predict`, formData);
 
-      setResult(response.data);
-    } catch (error) {
-      console.error("PREDICT ERROR:", error.response?.data || error.message);
-      alert("Error calling backend (predict)");
-    } finally {
-      setLoading(false);
+      console.log("PREDICT:", res.data);
+      setResult(res.data);
+    } catch (err) {
+      console.error("PREDICT ERROR:", err.response?.data || err);
+      alert("Predict API failed");
     }
+
+    setLoading(false);
   };
 
   // -------------------------
@@ -167,13 +162,13 @@ function App() {
   // -------------------------
   const getRecommendation = async () => {
     if (!result) {
-      alert("Predict food first");
+      alert("Predict first");
       return;
     }
 
     const formData = new FormData();
 
-    // FIX: convert everything to NUMBER
+    // 🔥 FORCE NUMBERS (IMPORTANT)
     formData.append("calories", Number(result.calories || 0));
     formData.append("protein", Number(result.protein || 0));
     formData.append("carbohydrates", Number(result.carbohydrates || 0));
@@ -182,51 +177,34 @@ function App() {
     formData.append("sugars", Number(result.sugars || 0));
     formData.append("sodium", Number(result.sodium || 0));
 
-    formData.append("age", Number(age || 0));
+    formData.append("age", parseInt(age) || 0);
     formData.append("gender", gender || "Unknown");
-
-    // FIX: map frontend goal → backend goal
-    let mappedGoal = "maintain";
-    if (goal === "weight loss") mappedGoal = "weight_loss";
-    if (goal === "muscle gain") mappedGoal = "weight_gain";
-
-    formData.append("goal", mappedGoal);
+    formData.append("goal", goal);
     formData.append("disease", disease || "");
 
     setRecLoading(true);
-    setRecommendation("");
 
     try {
-      const response = await axios.post(
-        "https://fyp-backend-production-82be.up.railway.app/recommend",
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
+      const res = await axios.post(`${API_BASE}/recommend`, formData);
+
+      console.log("RECOMMEND:", res.data);
+
+      setRecommendation(
+        res.data?.recommendations?.[0] || "No response"
       );
-
-      console.log("RESPONSE:", response.data);
-
-      const rec = response.data?.recommendations?.[0];
-
-      setRecommendation(rec || "No AI response received.");
-    } catch (error) {
-      console.error("RECOMMEND ERROR:", error.response?.data || error.message);
-      alert("Error getting recommendation");
-    } finally {
-      setRecLoading(false);
+    } catch (err) {
+      console.error("RECOMMEND ERROR:", err.response?.data || err);
+      alert("Recommendation API failed");
     }
+
+    setRecLoading(false);
   };
 
   return (
     <div className="app">
       <h1>🍽️ Nutrition Detector</h1>
 
-      <input
-        type="file"
-        accept="image/*"
-        onChange={(e) => setFile(e.target.files[0])}
-      />
+      <input type="file" onChange={(e) => setFile(e.target.files[0])} />
 
       <input
         type="number"
@@ -234,56 +212,34 @@ function App() {
         onChange={(e) => setWeight(e.target.value)}
       />
 
-      <button onClick={handlePredict} disabled={loading}>
+      <button onClick={handlePredict}>
         {loading ? "Predicting..." : "Predict"}
       </button>
 
       {result && (
-        <div>
-          <h3>{result.label}</h3>
+        <>
+          <h2>{result.label}</h2>
 
           <p>Calories: {result.calories}</p>
-          <p>Protein: {result.protein}</p>
-          <p>Carbs: {result.carbohydrates}</p>
-          <p>Fats: {result.fats}</p>
 
           <input
             type="number"
             placeholder="Age"
-            value={age}
             onChange={(e) => setAge(e.target.value)}
           />
 
-          <select value={gender} onChange={(e) => setGender(e.target.value)}>
+          <select onChange={(e) => setGender(e.target.value)}>
             <option value="">Gender</option>
             <option value="Male">Male</option>
             <option value="Female">Female</option>
           </select>
 
-          <select value={goal} onChange={(e) => setGoal(e.target.value)}>
-            <option value="maintain">Maintain</option>
-            <option value="weight loss">Weight Loss</option>
-            <option value="muscle gain">Muscle Gain</option>
-          </select>
-
-          <input
-            type="text"
-            placeholder="Disease"
-            value={disease}
-            onChange={(e) => setDisease(e.target.value)}
-          />
-
-          <button onClick={getRecommendation} disabled={recLoading}>
-            {recLoading ? "Analyzing..." : "Get Recommendation"}
+          <button onClick={getRecommendation}>
+            {recLoading ? "Loading..." : "Get Recommendation"}
           </button>
 
-          {recommendation && (
-            <div>
-              <h3>AI Recommendation</h3>
-              <p>{recommendation}</p>
-            </div>
-          )}
-        </div>
+          <p>{recommendation}</p>
+        </>
       )}
     </div>
   );
