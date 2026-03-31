@@ -109,7 +109,7 @@
 
 
 
-           import React, { useState } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import "./App.css";
 
@@ -128,7 +128,7 @@ function App() {
   const [recLoading, setRecLoading] = useState(false);
 
   // -------------------------
-  // Predict Food
+  // Predict
   // -------------------------
   const handlePredict = async () => {
     if (!file) {
@@ -138,7 +138,7 @@ function App() {
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("weight", weight);
+    formData.append("weight", Number(weight)); // FIX
 
     setLoading(true);
     setResult(null);
@@ -154,19 +154,16 @@ function App() {
       );
 
       setResult(response.data);
-
-      setFile(null);
-      document.getElementById("fileInput").value = "";
     } catch (error) {
-      console.error(error);
-      alert("Error calling backend");
+      console.error("PREDICT ERROR:", error.response?.data || error.message);
+      alert("Error calling backend (predict)");
     } finally {
       setLoading(false);
     }
   };
 
   // -------------------------
-  // Get Recommendation
+  // Recommendation
   // -------------------------
   const getRecommendation = async () => {
     if (!result) {
@@ -176,17 +173,24 @@ function App() {
 
     const formData = new FormData();
 
-    formData.append("calories", result.calories || 0);
-    formData.append("protein", result.protein || 0);
-    formData.append("carbohydrates", result.carbohydrates || 0);
-    formData.append("fats", result.fats || 0);
-    formData.append("fiber", result.fiber || 0);
-    formData.append("sugars", result.sugars || 0);
-    formData.append("sodium", result.sodium || 0);
+    // FIX: convert everything to NUMBER
+    formData.append("calories", Number(result.calories || 0));
+    formData.append("protein", Number(result.protein || 0));
+    formData.append("carbohydrates", Number(result.carbohydrates || 0));
+    formData.append("fats", Number(result.fats || 0));
+    formData.append("fiber", Number(result.fiber || 0));
+    formData.append("sugars", Number(result.sugars || 0));
+    formData.append("sodium", Number(result.sodium || 0));
 
-    formData.append("age", age || 0);
+    formData.append("age", Number(age || 0));
     formData.append("gender", gender || "Unknown");
-    formData.append("goal", goal || "maintain");
+
+    // FIX: map frontend goal → backend goal
+    let mappedGoal = "maintain";
+    if (goal === "weight loss") mappedGoal = "weight_loss";
+    if (goal === "muscle gain") mappedGoal = "weight_gain";
+
+    formData.append("goal", mappedGoal);
     formData.append("disease", disease || "");
 
     setRecLoading(true);
@@ -201,15 +205,13 @@ function App() {
         }
       );
 
+      console.log("RESPONSE:", response.data);
+
       const rec = response.data?.recommendations?.[0];
 
-      if (rec) {
-        setRecommendation(rec);
-      } else {
-        setRecommendation("No AI response received.");
-      }
-    } catch (err) {
-      console.error(err);
+      setRecommendation(rec || "No AI response received.");
+    } catch (error) {
+      console.error("RECOMMEND ERROR:", error.response?.data || error.message);
       alert("Error getting recommendation");
     } finally {
       setRecLoading(false);
@@ -218,89 +220,65 @@ function App() {
 
   return (
     <div className="app">
-      <h1 className="title">🍽️ Nutrition Detector</h1>
+      <h1>🍽️ Nutrition Detector</h1>
 
-      {/* INPUT SECTION */}
-      <div className="input-container">
-        <input
-          id="fileInput"
-          type="file"
-          accept="image/*"
-          onChange={(e) => setFile(e.target.files[0])}
-        />
+      <input
+        type="file"
+        accept="image/*"
+        onChange={(e) => setFile(e.target.files[0])}
+      />
 
-        <input
-          type="number"
-          min="1"
-          value={weight}
-          onChange={(e) => setWeight(e.target.value)}
-          placeholder="Weight (g)"
-        />
+      <input
+        type="number"
+        value={weight}
+        onChange={(e) => setWeight(e.target.value)}
+      />
 
-        <button onClick={handlePredict} disabled={loading}>
-          {loading ? "Predicting..." : "Predict"}
-        </button>
-      </div>
+      <button onClick={handlePredict} disabled={loading}>
+        {loading ? "Predicting..." : "Predict"}
+      </button>
 
-      {/* RESULT */}
       {result && (
-        <div className="result-card">
-          <h2>Prediction Result</h2>
+        <div>
+          <h3>{result.label}</h3>
 
-          <p className="food-label">
-            {result.label ? result.label.toUpperCase() : ""}
-          </p>
+          <p>Calories: {result.calories}</p>
+          <p>Protein: {result.protein}</p>
+          <p>Carbs: {result.carbohydrates}</p>
+          <p>Fats: {result.fats}</p>
 
-          <h3>Nutrition (for {result.weight} g)</h3>
+          <input
+            type="number"
+            placeholder="Age"
+            value={age}
+            onChange={(e) => setAge(e.target.value)}
+          />
 
-          <ul className="nutrition-list">
-            <li>Calories: {result.calories}</li>
-            <li>Protein: {result.protein} g</li>
-            <li>Carbohydrates: {result.carbohydrates} g</li>
-            <li>Fats: {result.fats} g</li>
-            <li>Fiber: {result.fiber} g</li>
-            <li>Sugars: {result.sugars} g</li>
-            <li>Sodium: {result.sodium} mg</li>
-          </ul>
+          <select value={gender} onChange={(e) => setGender(e.target.value)}>
+            <option value="">Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
 
-          {/* USER INPUT */}
-          <div className="user-inputs">
-            <h3>Personal Info</h3>
+          <select value={goal} onChange={(e) => setGoal(e.target.value)}>
+            <option value="maintain">Maintain</option>
+            <option value="weight loss">Weight Loss</option>
+            <option value="muscle gain">Muscle Gain</option>
+          </select>
 
-            <input
-              type="number"
-              placeholder="Age"
-              value={age}
-              onChange={(e) => setAge(e.target.value)}
-            />
+          <input
+            type="text"
+            placeholder="Disease"
+            value={disease}
+            onChange={(e) => setDisease(e.target.value)}
+          />
 
-            <select value={gender} onChange={(e) => setGender(e.target.value)}>
-              <option value="">Select Gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-            </select>
+          <button onClick={getRecommendation} disabled={recLoading}>
+            {recLoading ? "Analyzing..." : "Get Recommendation"}
+          </button>
 
-            <select value={goal} onChange={(e) => setGoal(e.target.value)}>
-              <option value="maintain">Maintain</option>
-              <option value="weight loss">Weight Loss</option>
-              <option value="muscle gain">Muscle Gain</option>
-            </select>
-
-            <input
-              type="text"
-              placeholder="Disease (optional)"
-              value={disease}
-              onChange={(e) => setDisease(e.target.value)}
-            />
-
-            <button onClick={getRecommendation} disabled={recLoading}>
-              {recLoading ? "Analyzing..." : "Get Recommendation"}
-            </button>
-          </div>
-
-          {/* AI OUTPUT */}
           {recommendation && (
-            <div className="recommendation-box">
+            <div>
               <h3>AI Recommendation</h3>
               <p>{recommendation}</p>
             </div>
