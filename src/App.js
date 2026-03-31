@@ -1,336 +1,191 @@
-// import React, { useState } from "react";
-// import axios from "axios";
-// import "./App.css";
-
-// function App() {
-//   const [file, setFile] = useState(null);
-//   const [weight, setWeight] = useState(100);
-//   const [result, setResult] = useState(null);
-//   const [loading, setLoading] = useState(false);
-
-//   const [age, setAge] = useState("");
-//   const [gender, setGender] = useState("");
-//   const [disease, setDisease] = useState("");
-//   const [goal, setGoal] = useState("maintain");
-
-//   const [recommendation, setRecommendation] = useState("");
-//   const [recLoading, setRecLoading] = useState(false);
-
-//   // -------------------------
-//   // Predict Food
-//   // -------------------------
-//   const handlePredict = async () => {
-//     if (!file) {
-//       alert("Please select an image");
-//       return;
-//     }
-
-//     const formData = new FormData();
-//     formData.append("file", file);
-//     formData.append("weight", weight);
-
-//     setLoading(true);
-//     setResult(null);
-//     setRecommendation("");
-
-//     try {
-//       const response = await axios.post(
-//         "https://fyp-backend-production-82be.up.railway.app/predict",
-//         formData,
-//         {
-//           headers: { "Content-Type": "multipart/form-data" },
-//         }
-//       );
-
-//       setResult(response.data);
-
-//       setFile(null);
-//       document.getElementById("fileInput").value = "";
-//     } catch (error) {
-//       console.error(error);
-//       alert("Error calling backend");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   // -------------------------
-//   // Get Recommendation
-//   // -------------------------
-//   const getRecommendation = async () => {
-//     if (!result) {
-//       alert("Predict food first");
-//       return;
-//     }
-
-//     const formData = new FormData();
-
-//     formData.append("calories", result.calories || 0);
-//     formData.append("protein", result.protein || 0);
-//     formData.append("carbohydrates", result.carbohydrates || 0);
-//     formData.append("fats", result.fats || 0);
-//     formData.append("fiber", result.fiber || 0);
-//     formData.append("sugars", result.sugars || 0);
-//     formData.append("sodium", result.sodium || 0);
-
-//     formData.append("age", age || 0);
-//     formData.append("gender", gender || "Unknown");
-//     formData.append("goal", goal || "maintain");
-//     formData.append("disease", disease || "");
-
-//     setRecLoading(true);
-//     setRecommendation("");
-
-//     try {
-//       const response = await axios.post(
-//         "https://fyp-backend-production-82be.up.railway.app/recommend",
-//         formData,
-//         {
-//           headers: { "Content-Type": "multipart/form-data" },
-//         }
-//       );
-
-//       const rec = response.data?.recommendations?.[0];
-
-//       if (rec) {
-//         setRecommendation(rec);
-//       } else {
-//         setRecommendation("No AI response received.");
-//       }
-//     } catch (err) {
-//       console.error(err);
-//       alert("Error getting recommendation");
-//     } finally {
-//       setRecLoading(false);
-//     }
-//   };
-
-//   return (
-//     <div className="app">
-//       <h1 className="title">🍽️ Nutrition Detector</h1>
-
-//       {/* INPUT SECTION */}
-//       <div className="input-container">
-//         <input
-//           id="fileInput"
-//           type="file"
-//           accept="image/*"
-//           onChange={(e) => setFile(e.target.files[0])}
-//         />
-
-//         <input
-//           type="number"
-//           min="1"
-//           value={weight}
-//           onChange={(e) => setWeight(e.target.value)}
-//           placeholder="Weight (g)"
-//         />
-
-//         <button onClick={handlePredict} disabled={loading}>
-//           {loading ? "Predicting..." : "Predict"}
-//         </button>
-//       </div>
-
-//       {/* RESULT */}
-//       {result && (
-//         <div className="result-card">
-//           <h2>Prediction Result</h2>
-
-//           <p className="food-label">
-//             {result.label ? result.label.toUpperCase() : ""}
-//           </p>
-
-//           <h3>Nutrition (for {result.weight} g)</h3>
-
-//           <ul className="nutrition-list">
-//             <li>Calories: {result.calories}</li>
-//             <li>Protein: {result.protein} g</li>
-//             <li>Carbohydrates: {result.carbohydrates} g</li>
-//             <li>Fats: {result.fats} g</li>
-//             <li>Fiber: {result.fiber} g</li>
-//             <li>Sugars: {result.sugars} g</li>
-//             <li>Sodium: {result.sodium} mg</li>
-//           </ul>
-
-//           {/* USER INPUT */}
-//           <div className="user-inputs">
-//             <h3>Personal Info</h3>
-
-//             <input
-//               type="number"
-//               placeholder="Age"
-//               value={age}
-//               onChange={(e) => setAge(e.target.value)}
-//             />
-
-//             <select value={gender} onChange={(e) => setGender(e.target.value)}>
-//               <option value="">Select Gender</option>
-//               <option value="Male">Male</option>
-//               <option value="Female">Female</option>
-//             </select>
-
-//             <select value={goal} onChange={(e) => setGoal(e.target.value)}>
-//               <option value="maintain">Maintain</option>
-//               <option value="weight loss">Weight Loss</option>
-//               <option value="muscle gain">Muscle Gain</option>
-//             </select>
-
-//             <input
-//               type="text"
-//               placeholder="Disease (optional)"
-//               value={disease}
-//               onChange={(e) => setDisease(e.target.value)}
-//             />
-
-//             <button onClick={getRecommendation} disabled={recLoading}>
-//               {recLoading ? "Analyzing..." : "Get Recommendation"}
-//             </button>
-//           </div>
-
-//           {/* AI OUTPUT */}
-//           {recommendation && (
-//             <div className="recommendation-box">
-//               <h3>AI Recommendation</h3>
-//               <p>{recommendation}</p>
-//             </div>
-//           )}
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
-// export default App;
-
-
-
 import React, { useState } from "react";
 import axios from "axios";
 
-export default function App() {
+const BACKEND_URL = "https://fyp-backend-production-82be.up.railway.app"; // 🔥 CHANGE THIS
+
+function App() {
   const [file, setFile] = useState(null);
   const [weight, setWeight] = useState(100);
-  const [result, setResult] = useState(null);
+
+  const [nutrition, setNutrition] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const BASE_URL = "https://fyp-backend-production-82be.up.railway.app";
+  const [age, setAge] = useState("");
+  const [gender, setGender] = useState("");
+  const [goal, setGoal] = useState("maintain");
+  const [disease, setDisease] = useState("");
 
+  const [recommendation, setRecommendation] = useState("");
+
+  // -------------------------
+  // Handle Image Upload
+  // -------------------------
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
+
+  // -------------------------
+  // Predict Nutrition
+  // -------------------------
   const handlePredict = async () => {
     if (!file) {
       alert("Please select an image");
       return;
     }
 
-    setLoading(true);
-    setResult(null);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("weight", weight);
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("weight", weight);
+      setLoading(true);
 
-      const res = await axios.post(`${BASE_URL}/predict`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const res = await axios.post(
+        `${BACKEND_URL}/predict`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
-      console.log("BACKEND RESPONSE:", res.data);
-
-      setResult(res.data);
-
+      setNutrition(res.data);
+      setLoading(false);
     } catch (err) {
-      console.log("ERROR:", err);
-
-      setResult({
-        error:
-          err?.response?.data?.error ||
-          "Server error or model failed to respond",
-      });
+      console.error(err);
+      alert("Prediction failed");
+      setLoading(false);
     }
+  };
 
-    setLoading(false);
+  // -------------------------
+  // Get AI Recommendation
+  // -------------------------
+  const handleRecommend = async () => {
+    if (!nutrition) return;
+
+    const formData = new FormData();
+
+    formData.append("calories", nutrition.calories);
+    formData.append("protein", nutrition.protein);
+    formData.append("carbohydrates", nutrition.carbohydrates);
+    formData.append("fats", nutrition.fats);
+    formData.append("fiber", nutrition.fiber);
+    formData.append("sugars", nutrition.sugars);
+    formData.append("sodium", nutrition.sodium);
+
+    formData.append("age", age);
+    formData.append("gender", gender);
+    formData.append("goal", goal);
+    formData.append("disease", disease);
+
+    try {
+      const res = await axios.post(
+        `${BACKEND_URL}/recommend`,
+        formData
+      );
+
+      setRecommendation(res.data.recommendations[0]);
+    } catch (err) {
+      console.error(err);
+      alert("Recommendation failed");
+    }
   };
 
   return (
-    <div style={styles.container}>
-      <h1>🍎 Food Nutrition AI</h1>
+    <div style={{ padding: 20, fontFamily: "Arial" }}>
+      <h1>🍎 Nutrition AI App</h1>
 
-      {/* FILE INPUT */}
-      <input
-        type="file"
-        accept="image/*"
-        onChange={(e) => setFile(e.target.files[0])}
-      />
+      {/* ---------------- Upload Section ---------------- */}
+      <div>
+        <h3>Upload Food Image</h3>
 
-      {/* WEIGHT INPUT */}
-      <input
-        type="number"
-        value={weight}
-        onChange={(e) => setWeight(e.target.value)}
-        placeholder="Enter weight"
-        style={{ marginLeft: 10 }}
-      />
+        <input type="file" onChange={handleFileChange} />
+        <br /><br />
 
-      {/* BUTTON */}
-      <button onClick={handlePredict} disabled={loading} style={styles.btn}>
-        {loading ? "Predicting..." : "Predict"}
-      </button>
+        <input
+          type="number"
+          placeholder="Weight (grams)"
+          value={weight}
+          onChange={(e) => setWeight(e.target.value)}
+        />
 
-      {/* ERROR */}
-      {result?.error && (
-        <div style={styles.errorBox}>
-          <h3>❌ Error</h3>
-          <p>{result.error}</p>
+        <br /><br />
+
+        <button onClick={handlePredict}>
+          {loading ? "Processing..." : "Predict Nutrition"}
+        </button>
+      </div>
+
+      {/* ---------------- Nutrition Result ---------------- */}
+      {nutrition && (
+        <div style={{ marginTop: 20 }}>
+          <h3>📊 Nutrition Result</h3>
+          <p><b>Food:</b> {nutrition.label}</p>
+          <p><b>Calories:</b> {nutrition.calories}</p>
+          <p><b>Protein:</b> {nutrition.protein}</p>
+          <p><b>Carbs:</b> {nutrition.carbohydrates}</p>
+          <p><b>Fats:</b> {nutrition.fats}</p>
+          <p><b>Fiber:</b> {nutrition.fiber}</p>
+          <p><b>Sugars:</b> {nutrition.sugars}</p>
+          <p><b>Sodium:</b> {nutrition.sodium}</p>
         </div>
       )}
 
-      {/* RESULT */}
-      {result && !result.error && (
-        <div style={styles.card}>
-          <h2>🍽️ Prediction Result</h2>
+      {/* ---------------- User Inputs ---------------- */}
+      {nutrition && (
+        <div style={{ marginTop: 20 }}>
+          <h3>👤 Your Details</h3>
 
-          <h3>Food: {result.label || "Unknown"}</h3>
+          <input
+            type="number"
+            placeholder="Age"
+            value={age}
+            onChange={(e) => setAge(e.target.value)}
+          />
+          <br /><br />
 
-          <p>Confidence: {result.confidence ?? 0}</p>
-          <p>Weight: {result.weight ?? weight}</p>
+          <select value={gender} onChange={(e) => setGender(e.target.value)}>
+            <option value="">Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
 
-          <hr />
+          <br /><br />
 
-          <p>Calories: {result.calories ?? 0}</p>
-          <p>Protein: {result.protein ?? 0} g</p>
-          <p>Carbohydrates: {result.carbohydrates ?? 0} g</p>
-          <p>Fats: {result.fats ?? 0} g</p>
-          <p>Fiber: {result.fiber ?? 0} g</p>
-          <p>Sugars: {result.sugars ?? 0} g</p>
-          <p>Sodium: {result.sodium ?? 0} mg</p>
+          <select value={goal} onChange={(e) => setGoal(e.target.value)}>
+            <option value="maintain">Maintain Weight</option>
+            <option value="loss">Lose Weight</option>
+            <option value="gain">Gain Weight</option>
+          </select>
+
+          <br /><br />
+
+          <input
+            type="text"
+            placeholder="Disease (optional)"
+            value={disease}
+            onChange={(e) => setDisease(e.target.value)}
+          />
+
+          <br /><br />
+
+          <button onClick={handleRecommend}>
+            Get AI Recommendation
+          </button>
+        </div>
+      )}
+
+      {/* ---------------- Recommendation ---------------- */}
+      {recommendation && (
+        <div style={{ marginTop: 20 }}>
+          <h3>🤖 AI Recommendation</h3>
+          <p>{recommendation}</p>
         </div>
       )}
     </div>
   );
 }
 
-const styles = {
-  container: {
-    padding: 30,
-    fontFamily: "Arial",
-    textAlign: "center",
-  },
-  btn: {
-    marginLeft: 10,
-    padding: "5px 10px",
-    cursor: "pointer",
-  },
-  card: {
-    marginTop: 20,
-    padding: 20,
-    border: "1px solid #ccc",
-    borderRadius: 10,
-    display: "inline-block",
-    textAlign: "left",
-  },
-  errorBox: {
-    marginTop: 20,
-    color: "red",
-  },
-};
+export default App;
