@@ -316,7 +316,7 @@ export default function App() {
               disabled={recLoading}
               style={{ ...styles.btn, ...styles.btnGemini }}
             >
-              {recLoading ? "✨ Gemini thinking..." : "✨ Get Gemini AI Advice"}
+              {recLoading ? "✨ AI thinking..." : "✨ Get AI Advice"}
             </button>
           </div>
         )}
@@ -327,8 +327,8 @@ export default function App() {
             <div style={styles.recHeader}>
               <span style={{ fontSize: 28 }}>🤖</span>
               <div>
-                <h2 style={styles.recTitle}>Gemini AI Recommendation</h2>
-                <p style={styles.recSub}>Powered by Gemini 2.5 Flash</p>
+                <h2 style={styles.recTitle}>AI Recommendation</h2>
+                <p style={styles.recSub}>Get Insights</p>
               </div>
             </div>
             <div style={styles.recBody}>
