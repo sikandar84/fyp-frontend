@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-const BACKEND = "https://fyp-backend-production-6fdd.up.railway.app";
+const BACKEND = "https://fyp-backend-production-82be.up.railway.app";
 
 const COLORS = {
   calories: "#FF6B6B",
